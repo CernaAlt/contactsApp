@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "837100629714",
+    "firebase_url": "https://contactsapp-f7cca-default-rtdb.firebaseio.com",
+    "project_id": "contactsapp-f7cca",
+    "storage_bucket": "contactsapp-f7cca.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837100629714:android:78593d78b589218136870b",
+        "android_client_info": {
+          "package_name": "com.upn.contactsapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBV1pv5VFzh5oSaeWW44bwx957MzwCpzGU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
