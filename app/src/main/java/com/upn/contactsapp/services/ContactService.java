@@ -9,15 +9,22 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface ContactService {
 
-    @GET("/contacts")
-    Call< List<Contact> > getAll();
+    /*@GET("/contacts")
+    Call< List<Contact> > getAll();*/
 
     @GET("/contacts/{id}")
     Call< Contact > find(@Path("id") int id);
 
     @POST("/contacts")
     Call<Contact> create(@Body Contact contact);
+
+
+    //Paginacion
+    @GET("contacts")
+    Call<List<Contact>> getContacts(@Query("page") int page, @Query("size") int size);
+
 }

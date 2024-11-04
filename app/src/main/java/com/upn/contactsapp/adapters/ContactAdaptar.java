@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,11 +59,13 @@ public class ContactAdaptar extends RecyclerView.Adapter<ContactAdaptar.ContactV
                 //Intent intent = new Intent(view.getContext(), );
             }
         });
+
+        Log.d("ContactAdaptar", "Tamaño total de la lista: " + data.size());
     }
 
     @Override
     public int getItemCount() {
-        return data.size();
+        return data != null ? data.size() : 0;
     }
 
     public static class ContactViewHolder extends RecyclerView.ViewHolder {

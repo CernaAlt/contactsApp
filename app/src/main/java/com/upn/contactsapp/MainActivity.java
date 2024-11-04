@@ -1,5 +1,6 @@
 package com.upn.contactsapp;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,8 +33,15 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
-    List<Contact> elementos = new ArrayList<>();
-    ContactAdaptar adaptar;
+
+    private ContactService service;
+    private List<Contact> elementos = new ArrayList<>();
+    private ContactAdaptar adaptar;
+
+    /************************Paginacion*******************************/
+    private boolean isLoading = false;
+    private int currentPage = 1;
+    private static final int PAGE_SIZE = 10;// Tamaño de la página (número de elementos por carga)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +73,16 @@ public class MainActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        ContactService service = retrofit.create(ContactService.class);
+        service = retrofit.create(ContactService.class);
 
-        service.getAll().enqueue(new Callback< List<Contact> >() {
+
+        setUpRecyclerView();
+
+        // Cargar la primera página de contactos
+        loadPage();
+
+
+        /*service.getAll().enqueue(new Callback< List<Contact> >() {
             @Override
             public void onResponse(Call<List<Contact>> call, Response< List<Contact> > response) {
                 //if (response.code() == 200)
@@ -93,9 +108,7 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call<List<Contact>> call, Throwable throwable) {
                 Log.e("MAIN_APP", throwable.getMessage());
             }
-        });
-
-        setUpRecyclerView();
+        });*/
 
         FloatingActionButton btnCreateContact = findViewById(R.id.btnCreateContact);
         btnCreateContact.setOnClickListener(view -> {
@@ -105,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
 
         Log.i("MAIN_APP", new Gson().toJson(contacts));
 
+        //create contacts
         for (Contact contact: contacts) {
             if (contact.id != 0) continue;
             service.create(contact).enqueue(new Callback<Contact>() {
@@ -130,22 +144,54 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
     }
 
-     @Override
-     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-         super.onActivityResult(requestCode, resultCode, data);
+    private void loadPage() {
+        isLoading = true;
+        service.getContacts(currentPage, PAGE_SIZE).enqueue(new Callback<List<Contact>>() {
+            @Override
+            public void onResponse(Call<List<Contact>> call, Response<List<Contact>> response) {
+                if (response.isSuccessful()) {
+                    List<Contact> contacts = response.body();
+                    if (contacts != null) {
+                        elementos.addAll(contacts);
+                        adaptar.notifyDataSetChanged();
+                        currentPage++; // Move to the next page after loading current page data
+                    }
+                }
+                isLoading = false;
+            }
 
-         if (requestCode == 100 && resultCode == 100) {
-             String contactJson = data.getStringExtra("CONTACT");
-             Contact contact = new Gson().fromJson(contactJson, Contact.class);
+            @Override
+            public void onFailure(Call<List<Contact>> call, Throwable t) {
+                Log.e("MAIN_APP", "Failed to load page: " + t.getMessage());
+                isLoading = false;
+            }
+        });
+    }
 
-             elementos.add(contact);
-             adaptar.notifyDataSetChanged();
-         }
 
-     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 100 && resultCode == 100) {
+            String contactJson = data.getStringExtra("CONTACT");
+            Contact contact = new Gson().fromJson(contactJson, Contact.class);
+
+            elementos.add(contact);
+            adaptar.notifyDataSetChanged();
+        }
+    }
+
+    /*private void setUpRecyclerView() {
+        RecyclerView rvContacts = findViewById(R.id.rvContacts);
+        rvContacts.setLayoutManager(new LinearLayoutManager(this));
+
+        adaptar = new ContactAdaptar(elementos);
+        rvContacts.setAdapter(adaptar);
+    }*/
 
     private void setUpRecyclerView() {
         RecyclerView rvContacts = findViewById(R.id.rvContacts);
@@ -153,5 +199,19 @@ public class MainActivity extends AppCompatActivity {
 
         adaptar = new ContactAdaptar(elementos);
         rvContacts.setAdapter(adaptar);
+
+        rvContacts.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager != null && !isLoading && layoutManager.findLastVisibleItemPosition() >= elementos.size() - 1) {
+                    // Load more contacts when the user reaches the end of the list
+                    loadPage();
+                }
+            }
+        });
     }
+
+
+
 }
